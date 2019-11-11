@@ -3,7 +3,7 @@
 'use strict'; // eslint-disable-line
 const program = require('commander');
 const path = require('path');
-const babylon = require('babylon');
+const babelParse = require('@babel/parser');
 const readFileSync = require('fs').readFileSync;
 const _ = require('lodash');
 const tree = require('pretty-tree');
@@ -158,19 +158,20 @@ function findContainerChild(node, body, imports, depth) {
 }
 
 function processFile(node, file, depth) {
-  const ast = babylon.parse(file, {
+  const ast = babelParse.parse(file, {
     sourceType: 'module',
+    tokens: true,
     plugins: [
       'asyncGenerators',
       'classProperties',
       'classProperties',
-      'decorators',
+      'decorators-legacy',
       'dynamicImport',
       'exportExtensions',
-      'flow',
       'functionBind',
       'functionSent',
       'jsx',
+      'typescript',
       'objectRestSpread',
     ],
   });
@@ -250,9 +251,9 @@ function done() {
 function getPossibleNames(baseName) {
   return [
     baseName,
-    baseName.replace('.js', '.jsx'),
+    baseName.replace('.js', '.tsx'),
     baseName.replace('.js', '/index.js'),
-    baseName.replace('.js', '/index.jsx'),
+    baseName.replace('.js', '/index.tsx'),
   ];
 }
 
@@ -280,7 +281,9 @@ function processNode(node, depth, parent) {
       processFile(node, file, depth);
       node.children.forEach(c => processNode(c, depth + 1, node));
       return;
-    } catch (e) {}
+    } catch (e) {
+      //console.log(e);
+    }
   }
 
   if (hideThirdParty) {
